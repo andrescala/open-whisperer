@@ -1,9 +1,9 @@
 import Foundation
 
 class ModelManager: NSObject, URLSessionDownloadDelegate {
-    static let modelFileName = "ggml-base.en.bin"
+    static let modelFileName = "ggml-small.en.bin"
     static let modelDownloadURL = URL(string:
-        "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin?download=true"
+        "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.en.bin?download=true"
     )!
 
     private var downloadCompletion: ((Result<URL, Error>) -> Void)?

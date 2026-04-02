@@ -25,26 +25,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self?.hotkeyManager.stop()
         }
 
-        Task {
-            await setup()
+        // Delay setup to let the run loop start and TCC read our Info.plist
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            Task {
+                await self.setup()
+            }
         }
     }
 
     private func setup() async {
-        // Step 1: Request microphone permission
-        let micGranted = await AudioRecorder.requestPermission()
-        guard micGranted else {
-            await MainActor.run {
-                statusBarController.updateState(.error("Mic denied"))
-                showAlert(
-                    title: "Microphone Access Required",
-                    message: "Whisperer needs microphone access to record your voice. Please grant access in System Settings > Privacy & Security > Microphone, then relaunch."
-                )
-            }
-            return
-        }
-
-        // Step 2: Download/load model
+        // Step 1: Download/load model (do this first while mic permission sorts itself out)
         await MainActor.run {
             statusBarController.updateState(.loading)
         }

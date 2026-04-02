@@ -23,11 +23,11 @@ On Apple Silicon, transcription is fast:
 
 | Speech Duration | Transcription Time (approx.) |
 |----------------|------------------------------|
-| 5 seconds | < 1 second |
-| 15 seconds | ~1-2 seconds |
-| 30 seconds | ~2-4 seconds |
+| 5 seconds | ~1 second |
+| 15 seconds | ~2-3 seconds |
+| 30 seconds | ~4-6 seconds |
 
-The app uses the Whisper `base.en` model (~148MB), which provides a good balance between speed and accuracy for English. It downloads automatically on first launch and is cached locally at `~/Library/Application Support/Whisperer/Models/`.
+The app uses the Whisper `small.en` model (~488MB) by default, which provides great accuracy for English. It downloads automatically on first launch and is cached locally at `~/Library/Application Support/Whisperer/Models/`.
 
 ---
 
@@ -185,6 +185,39 @@ open-whisperer/
 
 ---
 
+## Changing the Whisper Model
+
+The default model is `small.en` (~488MB). To switch to a different model, edit `ModelManager.swift` and change two values:
+
+```swift
+static let modelFileName = "ggml-small.en.bin"      // ← change filename
+static let modelDownloadURL = URL(string:
+    "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.en.bin?download=true"  // ← change URL
+)!
+```
+
+Available models:
+
+| Model | Filename | Size | Speed (30s, Apple Silicon) | Accuracy |
+|-------|----------|------|---------------------------|----------|
+| tiny.en | `ggml-tiny.en.bin` | 75 MB | ~1 sec | Good |
+| base.en | `ggml-base.en.bin` | 148 MB | ~2 sec | Better |
+| **small.en** | **`ggml-small.en.bin`** | **488 MB** | **~4-6 sec** | **Great (default)** |
+| medium.en | `ggml-medium.en.bin` | 1.5 GB | ~8-12 sec | Excellent |
+
+After changing the model, rebuild and delete the old cached model:
+
+```bash
+rm -rf ~/Library/Application\ Support/Whisperer/Models/
+xcodebuild -project Whisperer.xcodeproj -scheme Whisperer -configuration Release build
+```
+
+The new model will download automatically on next launch.
+
+> **Tip:** For machines with 8GB+ RAM and Apple Silicon, `small.en` is the sweet spot. Use `base.en` if you prefer faster responses over accuracy, or `medium.en` if accuracy is critical.
+
+---
+
 ## Troubleshooting
 
 ### Option+Space doesn't work
@@ -208,7 +241,6 @@ open-whisperer/
 
 ## Future Ideas
 
-- Larger models (`small.en`, `medium.en`) for better accuracy on technical jargon
 - AI post-processing via Claude or local LLM to clean up grammar and formatting
 - Custom vocabulary biasing for domain-specific terms
 - Transcription history with search

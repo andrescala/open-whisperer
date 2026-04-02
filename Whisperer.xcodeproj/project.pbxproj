@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		3464854BB2E76A9E8A5B63E7 /* TranscriptionEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BF41D548227288FA41124F5 /* TranscriptionEngine.swift */; };
 		3A1CEEA6D0AC5A97EF0E24DB /* WhispererError.swift in Sources */ = {isa = PBXBuildFile; fileRef = D457E958CF817F7C62CF2BA7 /* WhispererError.swift */; };
+		3AEC76FB5BE322D767E80794 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 096F90266EBB730FA7B7E503 /* Assets.xcassets */; };
 		40B673F7BFE2A686E605F7F3 /* HotkeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2926E70BD31DEC7DE0C4F651 /* HotkeyManager.swift */; };
 		557F144B89CB494380A89374 /* SwiftWhisper in Frameworks */ = {isa = PBXBuildFile; productRef = DA58E56F8070E4941605658A /* SwiftWhisper */; };
 		93F9577CF43E2F4FDB26FF47 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E930E847787305144EF52F34 /* AppDelegate.swift */; };
@@ -21,6 +22,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		096F90266EBB730FA7B7E503 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		2926E70BD31DEC7DE0C4F651 /* HotkeyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyManager.swift; sourceTree = "<group>"; };
 		41F78BE7E1F11174F869BE84 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		51317D1B281FAFC29E18515F /* OverlayWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayWindow.swift; sourceTree = "<group>"; };
@@ -51,6 +53,7 @@
 			isa = PBXGroup;
 			children = (
 				E930E847787305144EF52F34 /* AppDelegate.swift */,
+				096F90266EBB730FA7B7E503 /* Assets.xcassets */,
 				BD055C03C9301E59E74F625E /* AudioRecorder.swift */,
 				2926E70BD31DEC7DE0C4F651 /* HotkeyManager.swift */,
 				41F78BE7E1F11174F869BE84 /* main.swift */,
@@ -89,6 +92,7 @@
 			buildConfigurationList = 8A4008325FF980D5F931386C /* Build configuration list for PBXNativeTarget "Whisperer" */;
 			buildPhases = (
 				4377132CDDA89617A262C63E /* Sources */,
+				8B063E79A62519D6B69B67E5 /* Resources */,
 				83C0DE759F8243463F93D8D6 /* Frameworks */,
 			);
 			buildRules = (
@@ -138,6 +142,17 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		8B063E79A62519D6B69B67E5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3AEC76FB5BE322D767E80794 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		4377132CDDA89617A262C63E /* Sources */ = {
