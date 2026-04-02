@@ -1,0 +1,39 @@
+name: Whisperer
+options:
+  bundleIdPrefix: com.crutech
+  deploymentTarget:
+    macOS: "14.0"
+  xcodeVersion: "16.0"
+  createIntermediateGroups: true
+
+packages:
+  SwiftWhisper:
+    url: https://github.com/exPHAT/SwiftWhisper.git
+    branch: master
+
+targets:
+  Whisperer:
+    type: application
+    platform: macOS
+    sources:
+      - path: Whisperer
+        excludes:
+          - Info.plist
+    info:
+      path: Whisperer/Info.plist
+      properties:
+        LSUIElement: true
+        NSMicrophoneUsageDescription: "Whisperer needs microphone access to record your voice for transcription."
+        NSPrincipalClass: NSApplication
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.crutech.whisperer
+        CODE_SIGN_ENTITLEMENTS: Whisperer/Whisperer.entitlements
+        MACOSX_DEPLOYMENT_TARGET: "14.0"
+        SWIFT_VERSION: "5.9"
+        CODE_SIGN_IDENTITY: "-"
+        CODE_SIGN_INJECT_BASE_ENTITLEMENTS: "NO"
+        CODE_SIGN_STYLE: "Manual"
+        PRODUCT_NAME: Whisperer
+    dependencies:
+      - package: SwiftWhisper
