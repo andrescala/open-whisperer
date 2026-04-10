@@ -21,7 +21,7 @@
 	<key>LSUIElement</key>
 	<true/>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Whisperer needs microphone access to record your voice for transcription.</string>
+	<string>AC Voice needs microphone access to record your voice for transcription.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 </dict>

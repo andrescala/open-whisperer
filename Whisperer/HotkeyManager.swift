@@ -19,7 +19,7 @@ class HotkeyManager {
 
     func start() -> Bool {
         guard Self.checkAccessibility(prompt: false) else {
-            print("[Whisperer] Accessibility permission not granted")
+            print("[AC Voice] Accessibility permission not granted")
             return false
         }
 
@@ -36,7 +36,7 @@ class HotkeyManager {
             callback: hotkeyCallback,
             userInfo: Unmanaged.passUnretained(self).toOpaque()
         ) else {
-            print("[Whisperer] Failed to create event tap")
+            print("[AC Voice] Failed to create event tap")
             return false
         }
 
@@ -45,7 +45,7 @@ class HotkeyManager {
         CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource, .commonModes)
         CGEvent.tapEnable(tap: tap, enable: true)
 
-        print("[Whisperer] Hotkey listener started (Option+Space)")
+        print("[AC Voice] Hotkey listener started (Option+Space)")
         return true
     }
 

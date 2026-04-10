@@ -24,7 +24,7 @@ class StatusBarController {
     }
 
     private func setupMenu() {
-        let titleItem = NSMenuItem(title: "Whisperer", action: nil, keyEquivalent: "")
+        let titleItem = NSMenuItem(title: "AC Voice", action: nil, keyEquivalent: "")
         titleItem.isEnabled = false
         menu.addItem(titleItem)
 
@@ -36,7 +36,7 @@ class StatusBarController {
 
         menu.addItem(NSMenuItem.separator())
 
-        let quitItem = NSMenuItem(title: "Quit Whisperer", action: #selector(quitAction), keyEquivalent: "q")
+        let quitItem = NSMenuItem(title: "Quit AC Voice", action: #selector(quitAction), keyEquivalent: "q")
         quitItem.target = self
         menu.addItem(quitItem)
     }
@@ -46,7 +46,7 @@ class StatusBarController {
 
         switch state {
         case .idle:
-            button.image = NSImage(systemSymbolName: "waveform", accessibilityDescription: "Whisperer - Ready")
+            button.image = NSImage(systemSymbolName: "waveform", accessibilityDescription: "AC Voice - Ready")
             button.image?.isTemplate = true
             updateStatusText("Ready")
         case .recording:
@@ -76,7 +76,7 @@ class StatusBarController {
 
     private func updateStatusText(_ text: String) {
         if let firstItem = menu.items.first {
-            firstItem.title = "Whisperer — \(text)"
+            firstItem.title = "AC Voice — \(text)"
         }
     }
 

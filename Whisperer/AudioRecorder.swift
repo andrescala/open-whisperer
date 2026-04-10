@@ -4,7 +4,7 @@ class AudioRecorder {
     private var engine: AVAudioEngine?
     private var converter: AVAudioConverter?
     private var audioFrames: [Float] = []
-    private let bufferQueue = DispatchQueue(label: "com.whisperer.audiobuffer")
+    private let bufferQueue = DispatchQueue(label: "com.crutech.acvoice.audiobuffer")
     private(set) var isRecording = false
 
     /// Called on the main thread with the current RMS audio level (0.0 to 1.0)
@@ -26,7 +26,7 @@ class AudioRecorder {
         let inputNode = newEngine.inputNode
         let inputFormat = inputNode.outputFormat(forBus: 0)
 
-        print("[Whisperer] Input format: \(inputFormat.sampleRate)Hz, \(inputFormat.channelCount)ch")
+        print("[AC Voice] Input format: \(inputFormat.sampleRate)Hz, \(inputFormat.channelCount)ch")
 
         // Sanity check — if sample rate is 0, mic permission was denied silently
         guard inputFormat.sampleRate > 0 else {
@@ -94,7 +94,7 @@ class AudioRecorder {
         newEngine.prepare()
         try newEngine.start()
         isRecording = true
-        print("[Whisperer] Recording started")
+        print("[AC Voice] Recording started")
     }
 
     func stopRecording() -> [Float] {
@@ -108,19 +108,19 @@ class AudioRecorder {
 
         let frames = bufferQueue.sync { audioFrames }
 
-        print("[Whisperer] Stopped recording: \(frames.count) frames (\(String(format: "%.1f", Double(frames.count) / Self.targetSampleRate))s)")
+        print("[AC Voice] Stopped recording: \(frames.count) frames (\(String(format: "%.1f", Double(frames.count) / Self.targetSampleRate))s)")
 
         // Discard very short recordings (< 0.5 seconds)
         let minFrames = Int(Self.targetSampleRate * 0.5)
         guard frames.count >= minFrames else {
-            print("[Whisperer] Recording too short, discarding")
+            print("[AC Voice] Recording too short, discarding")
             return []
         }
 
         // Check if audio is effectively silent (all zeros = mic not working)
         let maxAmplitude = frames.map { abs($0) }.max() ?? 0
         if maxAmplitude < 0.001 {
-            print("[Whisperer] WARNING: Audio appears to be silent (max amplitude: \(maxAmplitude)). Check microphone permission.")
+            print("[AC Voice] WARNING: Audio appears to be silent (max amplitude: \(maxAmplitude)). Check microphone permission.")
         }
 
         return frames

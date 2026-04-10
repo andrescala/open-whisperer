@@ -11,7 +11,7 @@ class TranscriptionEngine {
         let config = WhisperKitConfig(model: modelName, verbose: false, logLevel: .none)
         pipe = try await WhisperKit(config)
         isModelLoaded = true
-        print("[Whisperer] WhisperKit ready with model: \(modelName)")
+        print("[AC Voice] WhisperKit ready with model: \(modelName)")
     }
 
     func transcribe(frames: [Float]) async throws -> String {
@@ -29,7 +29,7 @@ class TranscriptionEngine {
             .joined(separator: " ")
             .trimmingCharacters(in: .whitespacesAndNewlines)
 
-        print("[Whisperer] Transcribed: \"\(text)\"")
+        print("[AC Voice] Transcribed: \"\(text)\"")
         return text
     }
 }

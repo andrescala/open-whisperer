@@ -72,7 +72,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             accessibilityTimer?.invalidate()
             accessibilityTimer = nil
             statusBarController.updateState(.idle)
-            print("[Whisperer] Ready! Hold Option+Space to dictate.")
+            print("[AC Voice] Ready! Hold Option+Space to dictate.")
         } else {
             // Not yet granted — prompt once, then poll
             statusBarController.updateState(.error("Grant Accessibility"))
@@ -82,7 +82,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 NSWorkspace.shared.open(url)
             }
 
-            print("[Whisperer] Waiting for Accessibility permission...")
+            print("[AC Voice] Waiting for Accessibility permission...")
 
             // Poll every 2 seconds until the user grants it
             accessibilityTimer?.invalidate()
@@ -92,7 +92,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                     self.accessibilityTimer?.invalidate()
                     self.accessibilityTimer = nil
                     self.statusBarController.updateState(.idle)
-                    print("[Whisperer] Ready! Hold Option+Space to dictate.")
+                    print("[AC Voice] Ready! Hold Option+Space to dictate.")
                 }
             }
         }
@@ -109,7 +109,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             statusBarController.updateState(.recording)
             overlayWindow.show(mode: .recording)
         } catch {
-            print("[Whisperer] Failed to start recording: \(error)")
+            print("[AC Voice] Failed to start recording: \(error)")
             statusBarController.updateState(.error("Mic error"))
         }
     }
@@ -142,7 +142,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                     statusBarController.updateState(.idle)
                 }
             } catch {
-                print("[Whisperer] Transcription failed: \(error)")
+                print("[AC Voice] Transcription failed: \(error)")
                 await MainActor.run {
                     overlayWindow.hide()
                     isProcessing = false
