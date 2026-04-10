@@ -25,6 +25,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self?.hotkeyManager.stop()
         }
 
+        statusBarController.onTranslateToggled = { enabled in
+            print("[AC Voice] Translate to English: \(enabled)")
+        }
+
         // Delay setup to let the run loop start and TCC read our Info.plist
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             Task {
@@ -40,13 +44,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         do {
-            try await transcriptionEngine.loadModel(modelName: "large-v3-turbo")
+            try await transcriptionEngine.loadModel(modelName: "openai_whisper-large-v3")
         } catch {
+            print("[AC Voice] Setup failed: \(error)")
             await MainActor.run {
                 statusBarController.updateState(.error("Model failed"))
                 showAlert(
                     title: "Model Loading Failed",
-                    message: "Failed to load the Whisper model: \(error.localizedDescription)"
+                    message: "\(error)"
                 )
             }
             return
@@ -67,33 +72,40 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self?.stopDictation()
         }
 
-        if HotkeyManager.checkAccessibility(prompt: false) && hotkeyManager.start() {
-            // Accessibility granted and event tap created
-            accessibilityTimer?.invalidate()
-            accessibilityTimer = nil
-            statusBarController.updateState(.idle)
-            print("[AC Voice] Ready! Hold Option+Space to dictate.")
+        let isTrusted = HotkeyManager.checkAccessibility(prompt: false)
+        print("[AC Voice] AXIsProcessTrusted = \(isTrusted)")
+
+        if isTrusted {
+            let tapOK = hotkeyManager.start()
+            print("[AC Voice] CGEvent.tapCreate succeeded = \(tapOK)")
+            if tapOK {
+                accessibilityTimer?.invalidate()
+                accessibilityTimer = nil
+                statusBarController.updateState(.idle)
+                print("[AC Voice] Ready! Hold Option+Space to dictate.")
+                return
+            } else {
+                statusBarController.updateState(.error("Tap failed"))
+            }
         } else {
-            // Not yet granted — prompt once, then poll
             statusBarController.updateState(.error("Grant Accessibility"))
             _ = HotkeyManager.checkAccessibility(prompt: true)
-
             if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
                 NSWorkspace.shared.open(url)
             }
+        }
 
-            print("[AC Voice] Waiting for Accessibility permission...")
-
-            // Poll every 2 seconds until the user grants it
-            accessibilityTimer?.invalidate()
-            accessibilityTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
-                guard let self = self else { return }
-                if HotkeyManager.checkAccessibility(prompt: false) && self.hotkeyManager.start() {
-                    self.accessibilityTimer?.invalidate()
-                    self.accessibilityTimer = nil
-                    self.statusBarController.updateState(.idle)
-                    print("[AC Voice] Ready! Hold Option+Space to dictate.")
-                }
+        print("[AC Voice] Waiting for Accessibility permission...")
+        accessibilityTimer?.invalidate()
+        accessibilityTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
+            guard let self = self else { return }
+            let trusted = HotkeyManager.checkAccessibility(prompt: false)
+            print("[AC Voice] poll: trusted=\(trusted)")
+            if trusted && self.hotkeyManager.start() {
+                self.accessibilityTimer?.invalidate()
+                self.accessibilityTimer = nil
+                self.statusBarController.updateState(.idle)
+                print("[AC Voice] Ready! Hold Option+Space to dictate.")
             }
         }
     }
@@ -132,7 +144,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         Task {
             do {
-                let text = try await transcriptionEngine.transcribe(frames: frames)
+                let text = try await transcriptionEngine.transcribe(frames: frames, translate: statusBarController.translateEnabled)
                 await MainActor.run {
                     overlayWindow.hide()
                     if !text.isEmpty {

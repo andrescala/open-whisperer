@@ -197,11 +197,11 @@ Available WhisperKit models:
 
 | Model | Size | Speed (30s, M-series) | Languages | Notes |
 |-------|------|-----------------------|-----------|-------|
-| `tiny` | 75 MB | ~0.3 sec | Multilingual | Fastest, lower accuracy |
-| `base` | 145 MB | ~0.5 sec | Multilingual | Good balance for quick use |
-| `small` | 488 MB | ~0.8 sec | Multilingual | Better accuracy |
-| `large-v3-turbo` | ~800 MB | ~1.5 sec | Multilingual | **Default — best accuracy/speed** |
-| `large-v3` | 1.5 GB | ~3 sec | Multilingual | Highest accuracy |
+| `openai_whisper-tiny` | 75 MB | ~0.3 sec | Multilingual | Fastest, lower accuracy |
+| `openai_whisper-base` | 145 MB | ~0.5 sec | Multilingual | Good balance for quick use |
+| `openai_whisper-small` | 488 MB | ~0.8 sec | Multilingual | Better accuracy |
+| `openai_whisper-large-v3-v20240930_turbo` | ~800 MB | ~1.5 sec | Multilingual | **Default — best accuracy/speed** |
+| `openai_whisper-large-v3` | 1.5 GB | ~3 sec | Multilingual | Highest accuracy |
 
 After changing the model name, rebuild and clear the cached model:
 

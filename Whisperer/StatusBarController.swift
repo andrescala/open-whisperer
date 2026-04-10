@@ -11,8 +11,18 @@ enum AppState {
 class StatusBarController {
     private var statusItem: NSStatusItem
     private var menu: NSMenu
+    private var translateItem: NSMenuItem!
 
     var onQuit: (() -> Void)?
+    var onTranslateToggled: ((Bool) -> Void)?
+
+    var translateEnabled: Bool {
+        get { UserDefaults.standard.bool(forKey: "translateToEnglish") }
+        set {
+            UserDefaults.standard.set(newValue, forKey: "translateToEnglish")
+            translateItem.state = newValue ? .on : .off
+        }
+    }
 
     init() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
@@ -36,9 +46,21 @@ class StatusBarController {
 
         menu.addItem(NSMenuItem.separator())
 
+        translateItem = NSMenuItem(title: "Translate to English", action: #selector(toggleTranslate), keyEquivalent: "")
+        translateItem.target = self
+        translateItem.state = translateEnabled ? .on : .off
+        menu.addItem(translateItem)
+
+        menu.addItem(NSMenuItem.separator())
+
         let quitItem = NSMenuItem(title: "Quit AC Voice", action: #selector(quitAction), keyEquivalent: "q")
         quitItem.target = self
         menu.addItem(quitItem)
+    }
+
+    @objc private func toggleTranslate() {
+        translateEnabled = !translateEnabled
+        onTranslateToggled?(translateEnabled)
     }
 
     func updateState(_ state: AppState) {

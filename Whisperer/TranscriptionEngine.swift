@@ -6,15 +6,19 @@ class TranscriptionEngine {
     private(set) var isModelLoaded = false
 
     /// Downloads (if needed) and loads the WhisperKit model.
-    /// WhisperKit caches models at ~/Library/Caches/huggingface/
     func loadModel(modelName: String) async throws {
-        let config = WhisperKitConfig(model: modelName, verbose: false, logLevel: .none)
-        pipe = try await WhisperKit(config)
-        isModelLoaded = true
-        print("[AC Voice] WhisperKit ready with model: \(modelName)")
+        print("[AC Voice] Loading model: \(modelName)")
+        do {
+            pipe = try await WhisperKit(model: modelName)
+            isModelLoaded = true
+            print("[AC Voice] WhisperKit ready with model: \(modelName)")
+        } catch {
+            print("[AC Voice] Model load error: \(error)")
+            throw error
+        }
     }
 
-    func transcribe(frames: [Float]) async throws -> String {
+    func transcribe(frames: [Float], translate: Bool = false) async throws -> String {
         guard let pipe = pipe else {
             throw WhispererError.modelNotLoaded
         }
@@ -23,7 +27,9 @@ class TranscriptionEngine {
             throw WhispererError.emptyAudio
         }
 
-        let results = try await pipe.transcribe(audioArray: frames)
+        let task: DecodingTask = translate ? .translate : .transcribe
+        let options = DecodingOptions(task: task)
+        let results = try await pipe.transcribe(audioArray: frames, decodeOptions: options)
         let text = results
             .map { $0.text }
             .joined(separator: " ")
