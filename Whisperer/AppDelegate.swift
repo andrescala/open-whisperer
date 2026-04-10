@@ -6,7 +6,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var audioRecorder: AudioRecorder!
     private var transcriptionEngine: TranscriptionEngine!
     private var textInjector: TextInjector!
-    private var modelManager: ModelManager!
+
     private var overlayWindow: OverlayWindow!
     private var isProcessing = false
     private var accessibilityTimer: Timer?
@@ -16,7 +16,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         audioRecorder = AudioRecorder()
         transcriptionEngine = TranscriptionEngine()
         textInjector = TextInjector()
-        modelManager = ModelManager()
+
         hotkeyManager = HotkeyManager()
         overlayWindow = OverlayWindow()
 
@@ -40,13 +40,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         do {
-            let modelURL = try await modelManager.ensureModel { [weak self] progress in
-                DispatchQueue.main.async {
-                    self?.statusBarController.updateDownloadProgress(progress)
-                }
-            }
-
-            try transcriptionEngine.loadModel(from: modelURL)
+            try await transcriptionEngine.loadModel(modelName: "large-v3-turbo")
         } catch {
             await MainActor.run {
                 statusBarController.updateState(.error("Model failed"))

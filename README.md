@@ -2,7 +2,7 @@
 
 **Local, offline voice-to-text for macOS.** Hold Option+Space, speak, release — text appears at your cursor. Powered by Whisper AI, runs entirely on-device. No cloud, no accounts, no subscription.
 
-Built with [whisper.cpp](https://github.com/ggerganov/whisper.cpp) via [SwiftWhisper](https://github.com/exPHAT/SwiftWhisper) and native macOS APIs.
+Built with [WhisperKit](https://github.com/argmaxinc/WhisperKit) (Apple Neural Engine acceleration) and native macOS APIs.
 
 ---
 
@@ -19,15 +19,15 @@ The entire pipeline runs on your Mac. Audio never leaves your machine.
 
 ## Performance
 
-On Apple Silicon, transcription is fast:
+On Apple Silicon, transcription is fast thanks to WhisperKit's Neural Engine acceleration:
 
 | Speech Duration | Transcription Time (approx.) |
 |----------------|------------------------------|
-| 5 seconds | ~1 second |
-| 15 seconds | ~2-3 seconds |
-| 30 seconds | ~4-6 seconds |
+| 5 seconds | ~0.5 seconds |
+| 15 seconds | ~1 second |
+| 30 seconds | ~1.5 seconds |
 
-The app uses the Whisper `small.en` model (~488MB) by default, which provides great accuracy for English. It downloads automatically on first launch and is cached locally at `~/Library/Application Support/Whisperer/Models/`.
+The app uses the `large-v3-turbo` model by default — multilingual (English, Spanish, and more), highly accurate, and optimized for Apple Silicon via CoreML. It downloads automatically on first launch and is cached at `~/Library/Caches/huggingface/`.
 
 ---
 
@@ -82,7 +82,7 @@ Then press **Cmd+R** to build and run.
 On first launch, three things happen:
 
 ### 1. Model Download
-The Whisper `base.en` model (~148MB) downloads from HuggingFace. Progress is shown in the menu bar. This only happens once — the model is cached for all future launches.
+The `large-v3-turbo` model (~800MB) downloads from HuggingFace automatically. This only happens once — the model is cached at `~/Library/Caches/huggingface/` for all future launches. The menu bar shows a loading state while this happens.
 
 ### 2. Microphone Permission
 macOS will prompt you to grant microphone access. Click **Allow**. The app needs this to record your voice.
@@ -140,7 +140,7 @@ The text injection works by temporarily using your clipboard (the previous clipb
 
 | Component | Technology | What It Does |
 |-----------|-----------|--------------|
-| Speech-to-text | [whisper.cpp](https://github.com/ggerganov/whisper.cpp) via [SwiftWhisper](https://github.com/exPHAT/SwiftWhisper) | Transcribes audio to text using OpenAI's Whisper model, optimized for Apple Silicon |
+| Speech-to-text | [WhisperKit](https://github.com/argmaxinc/WhisperKit) by Argmax | CoreML + Neural Engine accelerated Whisper — multilingual, 2-3x faster than CPU-based inference |
 | Audio capture | AVAudioEngine + AVAudioConverter | Records microphone at native sample rate, converts to 16kHz mono float32 (what Whisper expects) |
 | Global hotkey | CGEvent tap | Listens for Option+Space system-wide, even when Whisperer isn't in focus |
 | Text injection | NSPasteboard + CGEvent | Saves clipboard, sets transcribed text, simulates Cmd+V paste, restores clipboard |
@@ -161,10 +161,9 @@ open-whisperer/
 │   ├── AppDelegate.swift          # Coordinator — wires all components, manages lifecycle
 │   ├── StatusBarController.swift  # Menu bar icon with state-dependent SF Symbols
 │   ├── AudioRecorder.swift        # AVAudioEngine → 16kHz mono float32 + audio level callback
-│   ├── TranscriptionEngine.swift  # SwiftWhisper model loading and async transcription
+│   ├── TranscriptionEngine.swift  # WhisperKit model init and async transcription
 │   ├── TextInjector.swift         # Clipboard save → set text → Cmd+V paste → clipboard restore
 │   ├── HotkeyManager.swift        # CGEvent tap for Option+Space hold/release detection
-│   ├── ModelManager.swift         # Downloads and caches GGML Whisper model files
 │   ├── OverlayWindow.swift        # Floating pill overlay (waveform + spinner modes)
 │   ├── WhispererError.swift       # Error type definitions
 │   ├── Info.plist                 # LSUIElement (no dock icon), mic usage description
@@ -187,34 +186,33 @@ open-whisperer/
 
 ## Changing the Whisper Model
 
-The default model is `small.en` (~488MB). To switch to a different model, edit `ModelManager.swift` and change two values:
+The default model is `large-v3-turbo` (multilingual, ~800MB). To switch, edit `TranscriptionEngine.swift` and change the model name:
 
 ```swift
-static let modelFileName = "ggml-small.en.bin"      // ← change filename
-static let modelDownloadURL = URL(string:
-    "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.en.bin?download=true"  // ← change URL
-)!
+func loadModel(modelName: String) async throws {
+    let config = WhisperKitConfig(model: "large-v3-turbo", ...)  // ← change model name here
 ```
 
-Available models:
+Available WhisperKit models:
 
-| Model | Filename | Size | Speed (30s, Apple Silicon) | Accuracy |
-|-------|----------|------|---------------------------|----------|
-| tiny.en | `ggml-tiny.en.bin` | 75 MB | ~1 sec | Good |
-| base.en | `ggml-base.en.bin` | 148 MB | ~2 sec | Better |
-| **small.en** | **`ggml-small.en.bin`** | **488 MB** | **~4-6 sec** | **Great (default)** |
-| medium.en | `ggml-medium.en.bin` | 1.5 GB | ~8-12 sec | Excellent |
+| Model | Size | Speed (30s, M-series) | Languages | Notes |
+|-------|------|-----------------------|-----------|-------|
+| `tiny` | 75 MB | ~0.3 sec | Multilingual | Fastest, lower accuracy |
+| `base` | 145 MB | ~0.5 sec | Multilingual | Good balance for quick use |
+| `small` | 488 MB | ~0.8 sec | Multilingual | Better accuracy |
+| `large-v3-turbo` | ~800 MB | ~1.5 sec | Multilingual | **Default — best accuracy/speed** |
+| `large-v3` | 1.5 GB | ~3 sec | Multilingual | Highest accuracy |
 
-After changing the model, rebuild and delete the old cached model:
+After changing the model name, rebuild and clear the cached model:
 
 ```bash
-rm -rf ~/Library/Application\ Support/Whisperer/Models/
+rm -rf ~/Library/Caches/huggingface/
 xcodebuild -project Whisperer.xcodeproj -scheme Whisperer -configuration Release build
 ```
 
 The new model will download automatically on next launch.
 
-> **Tip:** For machines with 8GB+ RAM and Apple Silicon, `small.en` is the sweet spot. Use `base.en` if you prefer faster responses over accuracy, or `medium.en` if accuracy is critical.
+> **Tip:** For M-series Macs with 16GB+ RAM, `large-v3-turbo` is the sweet spot — fast, accurate, and multilingual. Use `base` for near-instant transcription at the cost of some accuracy.
 
 ---
 
@@ -252,8 +250,7 @@ The new model will download automatically on next launch.
 ## Credits
 
 - [OpenAI Whisper](https://github.com/openai/whisper) — the speech recognition model
-- [whisper.cpp](https://github.com/ggerganov/whisper.cpp) — high-performance C++ port by Georgi Gerganov
-- [SwiftWhisper](https://github.com/exPHAT/SwiftWhisper) — Swift wrapper with async/await support
+- [WhisperKit](https://github.com/argmaxinc/WhisperKit) — CoreML + Neural Engine Swift framework by Argmax
 - [XcodeGen](https://github.com/yonaskolb/XcodeGen) — Xcode project generation from YAML
 
 ---

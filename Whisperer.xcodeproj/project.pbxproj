@@ -11,12 +11,11 @@
 		3A1CEEA6D0AC5A97EF0E24DB /* WhispererError.swift in Sources */ = {isa = PBXBuildFile; fileRef = D457E958CF817F7C62CF2BA7 /* WhispererError.swift */; };
 		3AEC76FB5BE322D767E80794 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 096F90266EBB730FA7B7E503 /* Assets.xcassets */; };
 		40B673F7BFE2A686E605F7F3 /* HotkeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2926E70BD31DEC7DE0C4F651 /* HotkeyManager.swift */; };
-		557F144B89CB494380A89374 /* SwiftWhisper in Frameworks */ = {isa = PBXBuildFile; productRef = DA58E56F8070E4941605658A /* SwiftWhisper */; };
+		557F144B89CB494380A89374 /* WhisperKit in Frameworks */ = {isa = PBXBuildFile; productRef = A262CFB5E63B0E0988251E99 /* WhisperKit */; };
 		93F9577CF43E2F4FDB26FF47 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E930E847787305144EF52F34 /* AppDelegate.swift */; };
 		9902311CE9110A2B2F89BF5F /* OverlayWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51317D1B281FAFC29E18515F /* OverlayWindow.swift */; };
 		9D50F0CAA02552EA0EDF5FEB /* AudioRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD055C03C9301E59E74F625E /* AudioRecorder.swift */; };
 		C5209F0B55C9D768A19C6583 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41F78BE7E1F11174F869BE84 /* main.swift */; };
-		CC68F53E9C791620B123F66C /* ModelManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D93904F9B232D06E72219B9 /* ModelManager.swift */; };
 		F5FA6EAF628BAEFF09529E9B /* TextInjector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8829964FEF64736E29EC393B /* TextInjector.swift */; };
 		FC6EE7089A2158565AA17A06 /* StatusBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6C657D06904096CE3DF3172 /* StatusBarController.swift */; };
 /* End PBXBuildFile section */
@@ -27,7 +26,6 @@
 		41F78BE7E1F11174F869BE84 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		51317D1B281FAFC29E18515F /* OverlayWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayWindow.swift; sourceTree = "<group>"; };
 		6BF41D548227288FA41124F5 /* TranscriptionEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptionEngine.swift; sourceTree = "<group>"; };
-		6D93904F9B232D06E72219B9 /* ModelManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelManager.swift; sourceTree = "<group>"; };
 		75A3C93687C0E07FBCEA08E9 /* Whisperer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Whisperer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		82322863D15E9801726B01A3 /* Whisperer.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Whisperer.entitlements; sourceTree = "<group>"; };
 		8829964FEF64736E29EC393B /* TextInjector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextInjector.swift; sourceTree = "<group>"; };
@@ -42,7 +40,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				557F144B89CB494380A89374 /* SwiftWhisper in Frameworks */,
+				557F144B89CB494380A89374 /* WhisperKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -57,7 +55,6 @@
 				BD055C03C9301E59E74F625E /* AudioRecorder.swift */,
 				2926E70BD31DEC7DE0C4F651 /* HotkeyManager.swift */,
 				41F78BE7E1F11174F869BE84 /* main.swift */,
-				6D93904F9B232D06E72219B9 /* ModelManager.swift */,
 				51317D1B281FAFC29E18515F /* OverlayWindow.swift */,
 				C6C657D06904096CE3DF3172 /* StatusBarController.swift */,
 				8829964FEF64736E29EC393B /* TextInjector.swift */,
@@ -101,7 +98,7 @@
 			);
 			name = Whisperer;
 			packageProductDependencies = (
-				DA58E56F8070E4941605658A /* SwiftWhisper */,
+				A262CFB5E63B0E0988251E99 /* WhisperKit */,
 			);
 			productName = Whisperer;
 			productReference = 75A3C93687C0E07FBCEA08E9 /* Whisperer.app */;
@@ -131,7 +128,7 @@
 			mainGroup = 92EC3EE3C09A4F30032E4E7B;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				852E1C4373D2A2034A6F4BF3 /* XCRemoteSwiftPackageReference "SwiftWhisper" */,
+				22624EAB9CF92292A2A67E34 /* XCRemoteSwiftPackageReference "WhisperKit" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 9CA779CAB0EB8E7C4E5F32C4 /* Products */;
@@ -162,7 +159,6 @@
 				93F9577CF43E2F4FDB26FF47 /* AppDelegate.swift in Sources */,
 				9D50F0CAA02552EA0EDF5FEB /* AudioRecorder.swift in Sources */,
 				40B673F7BFE2A686E605F7F3 /* HotkeyManager.swift in Sources */,
-				CC68F53E9C791620B123F66C /* ModelManager.swift in Sources */,
 				9902311CE9110A2B2F89BF5F /* OverlayWindow.swift in Sources */,
 				FC6EE7089A2158565AA17A06 /* StatusBarController.swift in Sources */,
 				F5FA6EAF628BAEFF09529E9B /* TextInjector.swift in Sources */,
@@ -362,21 +358,21 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		852E1C4373D2A2034A6F4BF3 /* XCRemoteSwiftPackageReference "SwiftWhisper" */ = {
+		22624EAB9CF92292A2A67E34 /* XCRemoteSwiftPackageReference "WhisperKit" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/exPHAT/SwiftWhisper.git";
+			repositoryURL = "https://github.com/argmaxinc/WhisperKit.git";
 			requirement = {
-				branch = master;
-				kind = branch;
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.9.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		DA58E56F8070E4941605658A /* SwiftWhisper */ = {
+		A262CFB5E63B0E0988251E99 /* WhisperKit */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 852E1C4373D2A2034A6F4BF3 /* XCRemoteSwiftPackageReference "SwiftWhisper" */;
-			productName = SwiftWhisper;
+			package = 22624EAB9CF92292A2A67E34 /* XCRemoteSwiftPackageReference "WhisperKit" */;
+			productName = WhisperKit;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
