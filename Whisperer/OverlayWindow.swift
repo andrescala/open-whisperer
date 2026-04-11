@@ -170,10 +170,10 @@ private class OverlayPillView: NSView {
             let h = minH + (maxH - minH) * mag
             let x = startX + CGFloat(i) * (barWidth + barGap)
 
-            // Colour shifts from cyan (low) toward teal/white (high magnitude)
-            let brightness = 0.55 + mag * 0.45
+            // Colour shifts from neon orange (low) toward bright orange-white (high magnitude)
+            let brightness = 0.85 + mag * 0.15
             let alpha      = 0.50 + mag * 0.50
-            NSColor(hue: 0.51, saturation: 1.0 - mag * 0.3,
+            NSColor(hue: 0.08, saturation: 1.0 - mag * 0.3,
                     brightness: brightness, alpha: alpha).setFill()
 
             let rect = NSRect(x: x, y: centerY - h / 2, width: barWidth, height: h)

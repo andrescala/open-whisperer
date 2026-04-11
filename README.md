@@ -1,257 +1,312 @@
-# Open Whisperer
+# AC Voice
 
-**Local, offline voice-to-text for macOS.** Hold Option+Space, speak, release — text appears at your cursor. Powered by Whisper AI, runs entirely on-device. No cloud, no accounts, no subscription.
-
-Built with [WhisperKit](https://github.com/argmaxinc/WhisperKit) (Apple Neural Engine acceleration) and native macOS APIs.
+**Local, offline voice-to-text for macOS.** Hold `Option + Space`, speak, release — transcribed text appears at your cursor in any app. Powered by OpenAI Whisper running entirely on-device via Apple's Neural Engine. No cloud, no accounts, no subscription, no data ever leaving your machine.
 
 ---
 
-## How It Works
+## Demo
 
-1. **Hold Option+Space** — a floating pill with a reactive waveform appears near your cursor and recording begins
-2. **Speak** — the waveform bars respond to your voice in real-time (quiet = low bars, loud = tall bars)
-3. **Release Option+Space** — the waveform switches to a spinning indicator while Whisper transcribes your audio locally
-4. **Text appears** at your cursor in whatever app you're using — VS Code, Slack, Safari, Terminal, Notes, anything
-
-The entire pipeline runs on your Mac. Audio never leaves your machine.
+| State | What you see |
+|-------|-------------|
+| **Idle** | Waveform icon in menu bar |
+| **Recording** | Orange waveform icon + floating pill with 16-bar FFT spectrum analyzer |
+| **Transcribing** | Spinning arc overlay while Whisper processes locally |
+| **Done** | Text injected at cursor, overlay disappears |
 
 ---
 
-## Performance
+## Features
 
-On Apple Silicon, transcription is fast thanks to WhisperKit's Neural Engine acceleration:
-
-| Speech Duration | Transcription Time (approx.) |
-|----------------|------------------------------|
-| 5 seconds | ~0.5 seconds |
-| 15 seconds | ~1 second |
-| 30 seconds | ~1.5 seconds |
-
-The app uses the `large-v3-turbo` model by default — multilingual (English, Spanish, and more), highly accurate, and optimized for Apple Silicon via CoreML. It downloads automatically on first launch and is cached at `~/Library/Caches/huggingface/`.
+- **100% offline** — after the first model download, zero network calls ever
+- **Works in any app** — VS Code, Slack, Safari, Terminal, Notes, anything that accepts keyboard input
+- **Real-time FFT spectrum visualizer** — 16 frequency bands react to actual microphone input using Apple's Accelerate framework
+- **Translate to English** — toggle in the menu bar to translate from any language while speaking
+- **Clipboard-safe text injection** — saves and restores previous clipboard contents around paste
+- **No dock icon** — lives entirely in the menu bar (LSUIElement)
+- **Automatic permission polling** — detects Accessibility grant without requiring a restart
+- **Self-signed cert support** — stable code signature means TCC permission survives rebuilds
 
 ---
 
 ## Requirements
 
-- **macOS 14.0+** (Sonoma or later)
-- **Apple Silicon** recommended (M1/M2/M3/M4) — Intel Macs work but transcription is slower
-- **Xcode** (with command line tools installed)
-- **[XcodeGen](https://github.com/yonaskolb/XcodeGen)** — install with `brew install xcodegen`
+| Requirement | Details |
+|-------------|---------|
+| **macOS** | 14.0 Sonoma or later |
+| **Hardware** | Apple Silicon strongly recommended (M1–M4). Intel works but transcription is slower. |
+| **Xcode** | 15+ with Command Line Tools (`xcode-select --install`) |
+| **Homebrew** | For installing XcodeGen |
+| **XcodeGen** | `brew install xcodegen` |
 
 ---
 
-## Build & Run
+## Installation
 
-### Option 1: Command Line
+### Quick Install (recommended)
 
 ```bash
-# Clone the repo
-git clone git@github.com:andrescala/open-whisperer.git
-cd open-whisperer
+# 1. Clone
+git clone https://github.com/andrescala/whisperer-open.git
+cd whisperer-open
 
-# Install xcodegen if you don't have it
+# 2. Install XcodeGen if you don't have it
 brew install xcodegen
 
-# Generate the Xcode project
+# 3. Generate the Xcode project
 xcodegen generate
 
-# Build (Release for best transcription performance)
-xcodebuild -project Whisperer.xcodeproj -scheme Whisperer -configuration Release build
+# 4. (Optional) Create a stable self-signed cert so permissions survive rebuilds
+make cert
 
-# Run
-open ~/Library/Developer/Xcode/DerivedData/Whisperer-*/Build/Products/Release/Whisperer.app
+# 5. Build, install to /Applications, and launch
+make install
 ```
 
-### Option 2: Xcode
+`make install` will:
+- Build in Release configuration
+- Copy the app to `/Applications/AC Voice.app`
+- Sign it with your cert (or ad-hoc if none)
+- Reset the Accessibility permission so macOS re-prompts cleanly
+- Launch the app
+
+### Manual Build via Xcode
 
 ```bash
-git clone git@github.com:andrescala/open-whisperer.git
-cd open-whisperer
+git clone https://github.com/andrescala/whisperer-open.git
+cd whisperer-open
 xcodegen generate
-open Whisperer.xcodeproj
+open ACVoice.xcodeproj
 ```
 
-Then press **Cmd+R** to build and run.
+Select the **Release** scheme and press `Cmd+R`.
 
-> **Note:** whisper.cpp runs 10-20x slower in Debug builds. Use the **Release** scheme when testing transcription performance.
+> ⚠️ **Always use Release for transcription.** Debug builds run 10–20x slower.
 
 ---
 
-## First Launch Setup
+## First Launch
 
-On first launch, three things happen:
-
-### 1. Model Download
-The `large-v3-turbo` model (~800MB) downloads from HuggingFace automatically. This only happens once — the model is cached at `~/Library/Caches/huggingface/` for all future launches. The menu bar shows a loading state while this happens.
+### 1. Model Download (~1.5 GB)
+The `openai_whisper-large-v3` model downloads automatically from HuggingFace on first launch and is cached at `~/Library/Caches/huggingface/`. This only happens once. The menu bar shows **"Loading model..."** during download.
 
 ### 2. Microphone Permission
-macOS will prompt you to grant microphone access. Click **Allow**. The app needs this to record your voice.
+macOS will prompt for microphone access. Click **Allow**.
 
 ### 3. Accessibility Permission
-The app needs Accessibility access to register the global hotkey (Option+Space) and to inject text at your cursor. System Settings will open automatically — find **Whisperer** in the Accessibility list and toggle it on.
+The app needs Accessibility access to:
+- Register the global `Option + Space` hotkey (via CGEvent tap)
+- Inject text at your cursor (via simulated Cmd+V)
 
-The app detects the permission automatically and activates as soon as you grant it. No restart needed.
+System Settings opens automatically — find **AC Voice** in the Accessibility list and enable it. No restart needed; the app polls for the permission and activates instantly.
 
 ---
 
 ## Usage
 
-Once set up, Whisperer lives in your **menu bar** as a waveform icon (no dock icon, no windows).
+Once set up, AC Voice lives in the **menu bar** with a waveform icon.
 
-| Action | What Happens |
-|--------|-------------|
-| **Hold Option+Space** | Recording starts, waveform overlay appears near cursor |
-| **Release Option+Space** | Recording stops, transcription begins (spinner overlay) |
-| **Transcription completes** | Text is pasted at your cursor, overlay disappears |
-| **Click menu bar icon** | Shows status and quit option |
+| Action | Result |
+|--------|--------|
+| **Hold `Option + Space`** | Recording starts, orange FFT spectrum pill appears near cursor |
+| **Speak** | Bars react to your voice frequencies in real time |
+| **Release `Option + Space`** | Recording stops, arc spinner appears during transcription |
+| **Transcription complete** | Text pasted at cursor, overlay disappears |
+| **Click menu bar icon** | Status, Translate toggle, About, Quit |
 
-The text injection works by temporarily using your clipboard (the previous clipboard contents are saved and restored after pasting).
+### Translate to English
+Enable **Translate to English** in the menu bar dropdown to have AC Voice translate your speech into English, regardless of what language you speak. Setting persists across launches.
+
+---
+
+## Makefile Commands
+
+```bash
+make install          # Build → install to /Applications → sign → launch
+make cert             # Create 'AC Voice Dev' self-signed cert (run once)
+make reset-permissions  # Reset Accessibility TCC entry if permission gets stuck
+```
 
 ---
 
 ## Architecture
 
 ```
-                    ┌─────────────────┐
-                    │   HotkeyManager │  CGEvent tap (Option+Space)
-                    │   (keyDown/Up)  │
-                    └────────┬────────┘
-                             │
-                    ┌────────▼────────┐
-                    │   AppDelegate   │  Coordinator
-                    └──┬──────────┬───┘
-          keyDown      │          │      keyUp
-       ┌───────────────▼┐   ┌────▼──────────────┐
-       │  AudioRecorder  │   │ AudioRecorder.stop │
-       │  .startRecording│   │ returns [Float]    │
-       │  (16kHz mono)   │   └────────┬───────────┘
-       └───────┬─────────┘            │
-               │                ┌─────▼──────────────┐
-               │ audio levels   │ TranscriptionEngine │  SwiftWhisper
-               │                │ .transcribe(frames) │  (whisper.cpp)
-       ┌───────▼─────────┐     └─────────┬───────────┘
-       │  OverlayWindow  │               │
-       │  (waveform bars)│         ┌─────▼──────┐
-       └─────────────────┘         │ TextInjector│  Clipboard + Cmd+V
-                                   └─────────────┘
+HotkeyManager (Option+Space keyDown)
+    └──▶ AppDelegate.startDictation()
+              └──▶ AudioRecorder.startRecording()
+                        └──▶ onFrequencyBands callback
+                                  └──▶ OverlayWindow.updateFrequencyBands()  (FFT bars)
+
+HotkeyManager (Option+Space keyUp)
+    └──▶ AppDelegate.stopDictation()
+              ├──▶ AudioRecorder.stopRecording() → [Float] (16kHz mono PCM)
+              ├──▶ OverlayWindow.show(mode: .transcribing)  (arc spinner)
+              ├──▶ TranscriptionEngine.transcribe(frames:translate:) → String
+              └──▶ TextInjector.inject(text)
 ```
-
-### Tech Stack
-
-| Component | Technology | What It Does |
-|-----------|-----------|--------------|
-| Speech-to-text | [WhisperKit](https://github.com/argmaxinc/WhisperKit) by Argmax | CoreML + Neural Engine accelerated Whisper — multilingual, 2-3x faster than CPU-based inference |
-| Audio capture | AVAudioEngine + AVAudioConverter | Records microphone at native sample rate, converts to 16kHz mono float32 (what Whisper expects) |
-| Global hotkey | CGEvent tap | Listens for Option+Space system-wide, even when Whisperer isn't in focus |
-| Text injection | NSPasteboard + CGEvent | Saves clipboard, sets transcribed text, simulates Cmd+V paste, restores clipboard |
-| Menu bar UI | NSStatusBar | Waveform icon with state changes (idle/recording/transcribing/error) |
-| Recording overlay | NSWindow (borderless, floating) | Pill-shaped widget with reactive waveform bars that follows the cursor |
-| Transcribing overlay | NSWindow (borderless, floating) | Same pill, switches to spinning dots while processing |
-| Model management | URLSession | Downloads GGML model from HuggingFace on first launch, caches locally |
 
 ---
 
 ## Project Structure
 
 ```
-open-whisperer/
-├── project.yml                    # XcodeGen config (generates the .xcodeproj)
-├── Whisperer/
-│   ├── main.swift                 # App entry point
-│   ├── AppDelegate.swift          # Coordinator — wires all components, manages lifecycle
-│   ├── StatusBarController.swift  # Menu bar icon with state-dependent SF Symbols
-│   ├── AudioRecorder.swift        # AVAudioEngine → 16kHz mono float32 + audio level callback
-│   ├── TranscriptionEngine.swift  # WhisperKit model init and async transcription
-│   ├── TextInjector.swift         # Clipboard save → set text → Cmd+V paste → clipboard restore
-│   ├── HotkeyManager.swift        # CGEvent tap for Option+Space hold/release detection
-│   ├── OverlayWindow.swift        # Floating pill overlay (waveform + spinner modes)
-│   ├── WhispererError.swift       # Error type definitions
-│   ├── Info.plist                 # LSUIElement (no dock icon), mic usage description
-│   └── Whisperer.entitlements     # Audio input entitlement (no sandbox)
-└── Whisperer.xcodeproj/           # Generated by xcodegen (can be regenerated)
+whisperer-open/
+├── project.yml                    # XcodeGen config — source of truth for the Xcode project
+├── Makefile                       # Build, cert, and permission reset helpers
+├── install.sh                     # Full build → install → sign → launch pipeline
+├── ACVoice.xcodeproj/             # Generated by xcodegen (safe to regenerate)
+└── Whisperer/
+    ├── main.swift                 # NSApplication entry point
+    ├── AppDelegate.swift          # Central coordinator — wires all components, manages lifecycle
+    ├── StatusBarController.swift  # Menu bar icon, state-dependent SF Symbols, translate toggle
+    ├── AudioRecorder.swift        # AVAudioEngine tap → 16kHz mono float32 + real-time FFT bands
+    ├── TranscriptionEngine.swift  # WhisperKit model loading + async transcription
+    ├── TextInjector.swift         # Clipboard save → set text → simulate Cmd+V → clipboard restore
+    ├── HotkeyManager.swift        # CGEvent tap for Option+Space hold/release detection
+    ├── OverlayWindow.swift        # Floating pill: 16-bar FFT spectrum (recording) + arc spinner (transcribing)
+    ├── WhispererError.swift       # Typed error definitions
+    ├── Info.plist                 # LSUIElement=true, NSMicrophoneUsageDescription
+    └── ACVoice.entitlements       # com.apple.security.device.audio-input (no sandbox)
 ```
 
 ---
 
-## Privacy & Security
+## Open Source Libraries & Models
 
-- **100% local** — after the initial model download, there are zero network calls. Ever.
-- **No telemetry, no analytics, no tracking, no accounts**
-- **Audio is never saved to disk** — it's processed in memory and discarded after transcription
-- **Clipboard is preserved** — previous clipboard contents are saved before pasting and restored after
-- **No sandbox** — the app requires CGEvent taps for the global hotkey and text injection, which are incompatible with macOS App Sandbox. This means the app must be run outside of the Mac App Store.
-- **Permissions are minimal** — only Microphone (to record) and Accessibility (for the hotkey and paste simulation)
+### [WhisperKit](https://github.com/argmaxinc/WhisperKit) — argmaxinc
+Swift framework that wraps OpenAI Whisper models compiled to CoreML, running on Apple's Neural Engine. Delivers 2–5x faster inference than CPU-based whisper.cpp on Apple Silicon. Handles model download, caching, and async transcription.
+
+```swift
+// Package dependency in project.yml:
+packages:
+  WhisperKit:
+    url: https://github.com/argmaxinc/WhisperKit.git
+    from: 0.9.0
+```
+
+### [OpenAI Whisper large-v3](https://huggingface.co/openai/whisper-large-v3)
+State-of-the-art multilingual speech recognition model. Supports 99+ languages. The `large-v3` variant used here achieves near-human accuracy on clean speech. Downloaded automatically from HuggingFace (~1.5 GB, cached after first run).
+
+### Apple Accelerate / vDSP
+Apple's high-performance SIMD math framework, used for the real-time FFT spectrum analysis:
+- `vDSP_create_fftsetup` — 1024-point FFT setup
+- `vDSP_hann_window` — Hann windowing to reduce spectral leakage
+- `vDSP_fft_zrip` — forward FFT on each audio buffer
+- `vDSP_zvabs` — magnitude extraction
+- 16 log-scaled frequency bands mapped to the speech range (~80 Hz – 7 kHz)
+
+### Apple AVFoundation
+- `AVAudioEngine` — low-latency microphone tap at the system's native sample rate
+- `AVAudioConverter` — downsample from native rate (e.g. 48kHz) to 16kHz mono float32 (Whisper's expected format)
+
+### Apple CoreGraphics (CGEvent)
+- Global event tap for `Option + Space` keyDown/keyUp — works system-wide, even when AC Voice is not focused
+- Simulated `Cmd+V` keyboard event for text injection into the frontmost app
+
+### Apple CVDisplayLink
+Used inside `OverlayPillView` to drive waveform and spinner animations at the display's native refresh rate (typically 60 or 120 fps), synchronized with the screen rather than timer-based.
+
+### Apple NSPasteboard
+Clipboard management for text injection — saves all existing pasteboard types before overwriting, restores them 200ms after paste so the user's clipboard is preserved.
 
 ---
 
 ## Changing the Whisper Model
 
-The default model is `large-v3-turbo` (multilingual, ~800MB). To switch, edit `TranscriptionEngine.swift` and change the model name:
+Edit `AppDelegate.swift` and change the model name passed to `loadModel`:
 
 ```swift
-func loadModel(modelName: String) async throws {
-    let config = WhisperKitConfig(model: "large-v3-turbo", ...)  // ← change model name here
+try await transcriptionEngine.loadModel(modelName: "openai_whisper-large-v3")
 ```
 
-Available WhisperKit models:
+Available models (all auto-downloaded from HuggingFace):
 
-| Model | Size | Speed (30s, M-series) | Languages | Notes |
-|-------|------|-----------------------|-----------|-------|
-| `openai_whisper-tiny` | 75 MB | ~0.3 sec | Multilingual | Fastest, lower accuracy |
-| `openai_whisper-base` | 145 MB | ~0.5 sec | Multilingual | Good balance for quick use |
-| `openai_whisper-small` | 488 MB | ~0.8 sec | Multilingual | Better accuracy |
-| `openai_whisper-large-v3-v20240930_turbo` | ~800 MB | ~1.5 sec | Multilingual | **Default — best accuracy/speed** |
-| `openai_whisper-large-v3` | 1.5 GB | ~3 sec | Multilingual | Highest accuracy |
+| Model | Size | Speed on M-series (30s audio) | Notes |
+|-------|------|-------------------------------|-------|
+| `openai_whisper-tiny` | ~75 MB | ~0.2s | Fastest, lowest accuracy |
+| `openai_whisper-base` | ~145 MB | ~0.4s | Good for quick use |
+| `openai_whisper-small` | ~488 MB | ~0.7s | Better accuracy |
+| `openai_whisper-large-v3-v20240930_turbo` | ~800 MB | ~1.0s | Great speed/accuracy balance |
+| `openai_whisper-large-v3` | ~1.5 GB | ~1.5s | **Default — highest accuracy** |
 
-After changing the model name, rebuild and clear the cached model:
+After changing the model, run `make install`. Clear the old cached model if switching:
 
 ```bash
 rm -rf ~/Library/Caches/huggingface/
-xcodebuild -project Whisperer.xcodeproj -scheme Whisperer -configuration Release build
+make install
 ```
-
-The new model will download automatically on next launch.
-
-> **Tip:** For M-series Macs with 16GB+ RAM, `large-v3-turbo` is the sweet spot — fast, accurate, and multilingual. Use `base` for near-instant transcription at the cost of some accuracy.
 
 ---
 
 ## Troubleshooting
 
-### Option+Space doesn't work
-- Check **System Settings > Privacy & Security > Accessibility** — Whisperer must be toggled on
-- If you rebuilt the app, the Accessibility toggle may have reset (the code signature changed). Toggle it off and on again
-- Check for conflicts with other apps that use Option+Space (Raycast, Alfred, Spotlight alternatives)
+### `Option + Space` does nothing
+1. Open **System Settings → Privacy & Security → Accessibility**
+2. Find **AC Voice** and make sure it's toggled **on**
+3. If the toggle is missing, run `make install` — it resets and re-prompts
+4. Check for conflicts: Raycast, Alfred, and Spotlight can claim `Option + Space`
 
-### Transcription is slow
-- Make sure you're running a **Release** build, not Debug. Debug builds of whisper.cpp are 10-20x slower
-- On Intel Macs, transcription is significantly slower than on Apple Silicon
+### Permissions keep resetting after rebuilding
+Run `make cert` once to create a stable self-signed certificate. Ad-hoc signed apps get a new hash on every build, which invalidates TCC entries. A named certificate keeps the identity stable.
 
-### App crashes on launch
-- Ensure the Microphone usage description is present in Info.plist (regenerate with `xcodegen generate` if needed)
-- Try resetting permissions: `tccutil reset Microphone com.crutech.whisperer`
+### App doesn't open / crashes silently
+```bash
+# Check crash logs
+ls ~/Library/Logs/DiagnosticReports/ | grep -i acvoice
+
+# Reset all permissions and reinstall
+make reset-permissions
+make install
+```
+
+### Transcription is very slow
+- Use a **Release** build. Debug builds are 10–20x slower.
+- On Intel Macs, transcription is CPU-only — consider `openai_whisper-base` or `openai_whisper-small`
 
 ### Text doesn't appear at cursor
-- Check that the target app supports Cmd+V paste
-- Some apps with custom input handling may not respond to simulated keyboard events
+- Some apps with fully custom input (e.g. game engines, VMs) don't respond to simulated Cmd+V
+- Verify **Accessibility** permission is granted — text injection requires it
+
+### Microphone sounds silent / transcription returns blank
+```bash
+tccutil reset Microphone com.crutech.acvoice
+```
+Then relaunch and grant mic permission again.
+
+---
+
+## Privacy & Security
+
+| Concern | Answer |
+|---------|--------|
+| Does audio leave my Mac? | **Never.** After the initial model download, there are zero network connections |
+| Is audio saved to disk? | **No.** Audio is processed in memory and discarded immediately after transcription |
+| Is my clipboard read? | Only temporarily during injection — saved, overwritten with transcription, then restored |
+| Why no App Sandbox? | CGEvent taps (global hotkey) and simulated keystrokes are incompatible with macOS sandbox |
+| What permissions are needed? | Microphone (record voice) and Accessibility (hotkey + paste simulation) — nothing else |
 
 ---
 
 ## Future Ideas
 
-- AI post-processing via Claude or local LLM to clean up grammar and formatting
-- Custom vocabulary biasing for domain-specific terms
-- Transcription history with search
 - Configurable hotkey
-- Voice commands ("open Safari", "new paragraph")
+- Transcription history with copy/search
+- Custom vocabulary / prompt biasing for domain-specific terms
+- AI post-processing (punctuation cleanup, formatting) via local LLM
+- Voice commands ("new paragraph", "select all")
+- Menu bar waveform animation while recording
 
 ---
 
 ## Credits
 
-- [OpenAI Whisper](https://github.com/openai/whisper) — the speech recognition model
-- [WhisperKit](https://github.com/argmaxinc/WhisperKit) — CoreML + Neural Engine Swift framework by Argmax
-- [XcodeGen](https://github.com/yonaskolb/XcodeGen) — Xcode project generation from YAML
+Built with:
+- [WhisperKit](https://github.com/argmaxinc/WhisperKit) by [Argmax](https://www.argmaxinc.com/)
+- [OpenAI Whisper](https://github.com/openai/whisper) — large-v3 model
+- [XcodeGen](https://github.com/yonaskolb/XcodeGen) by Yonas Kolb
+- Apple Accelerate, AVFoundation, CoreGraphics, CVDisplayLink
+
+Created by **Claude Code** (Sonnet 4.6 & Opus 4.6) & **Andres Cala** — [andres.cala@ac-labs.com](mailto:andres.cala@ac-labs.com)
 
 ---
 

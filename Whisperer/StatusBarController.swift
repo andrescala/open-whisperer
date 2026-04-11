@@ -53,9 +53,52 @@ class StatusBarController {
 
         menu.addItem(NSMenuItem.separator())
 
+        let aboutItem = NSMenuItem(title: "About AC Voice", action: #selector(showAbout), keyEquivalent: "")
+        aboutItem.target = self
+        menu.addItem(aboutItem)
+
+        menu.addItem(NSMenuItem.separator())
+
         let quitItem = NSMenuItem(title: "Quit AC Voice", action: #selector(quitAction), keyEquivalent: "q")
         quitItem.target = self
         menu.addItem(quitItem)
+    }
+
+    @objc private func showAbout() {
+        let alert = NSAlert()
+        alert.messageText = "AC Voice"
+        alert.informativeText = """
+            Local, offline voice-to-text for macOS.
+            Hold Option + Space to dictate — text appears at your cursor in any app.
+
+            ── Features ──────────────────────────
+            • 100% offline — audio never leaves your Mac
+            • Powered by OpenAI Whisper large-v3 via Neural Engine (WhisperKit)
+            • Real-time FFT spectrum visualizer during recording
+            • Translate speech to English from any language
+            • Works in any app — no integration required
+
+            ── Open Source Libraries ─────────────
+            • WhisperKit (argmaxinc) — CoreML/Neural Engine Whisper inference
+            • OpenAI Whisper large-v3 — state-of-the-art speech recognition model
+            • Apple Accelerate / vDSP — real-time FFT frequency analysis
+            • AVFoundation — microphone capture & audio conversion
+            • CoreGraphics CGEvent — system-wide hotkey detection
+
+            ── Created by ────────────────────────
+            Claude Code (Sonnet 4.6 & Opus 4.6)
+            & Andres Cala — andres.cala@ac-labs.com
+            """
+        alert.alertStyle = .informational
+        alert.addButton(withTitle: "Close")
+
+        if let icon = NSImage(systemSymbolName: "waveform.circle.fill", accessibilityDescription: nil) {
+            let config = NSImage.SymbolConfiguration(pointSize: 48, weight: .regular)
+                .applying(NSImage.SymbolConfiguration(paletteColors: [.systemOrange]))
+            alert.icon = icon.withSymbolConfiguration(config)
+        }
+
+        alert.runModal()
     }
 
     @objc private func toggleTranslate() {
@@ -72,7 +115,7 @@ class StatusBarController {
             button.image?.isTemplate = true
             updateStatusText("Ready")
         case .recording:
-            let config = NSImage.SymbolConfiguration(paletteColors: [.systemCyan])
+            let config = NSImage.SymbolConfiguration(paletteColors: [.systemOrange])
             button.image = NSImage(systemSymbolName: "waveform.circle.fill", accessibilityDescription: "Recording")?
                 .withSymbolConfiguration(config)
             updateStatusText("Recording...")
