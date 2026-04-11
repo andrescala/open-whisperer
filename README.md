@@ -58,8 +58,8 @@
 
 ```bash
 # 1. Clone
-git clone https://github.com/andrescala/whisperer-open.git
-cd whisperer-open
+git clone https://github.com/andrescala/ac-voice.git
+cd ac-voice
 
 # 2. Install XcodeGen if you don't have it
 brew install xcodegen
@@ -84,8 +84,8 @@ make install
 ### Manual Build via Xcode
 
 ```bash
-git clone https://github.com/andrescala/whisperer-open.git
-cd whisperer-open
+git clone https://github.com/andrescala/ac-voice.git
+cd ac-voice
 xcodegen generate
 open ACVoice.xcodeproj
 ```
