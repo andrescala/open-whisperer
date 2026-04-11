@@ -29,19 +29,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             print("[AC Voice] Translate to English: \(enabled)")
         }
 
-        // Delay setup to let the run loop start and TCC read our Info.plist
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            Task {
-                await self.setup()
-            }
+            Task { await self.setup() }
         }
     }
 
     private func setup() async {
-        // Step 1: Download/load model (do this first while mic permission sorts itself out)
-        await MainActor.run {
-            statusBarController.updateState(.loading)
-        }
+        await MainActor.run { statusBarController.updateState(.loading) }
 
         do {
             try await transcriptionEngine.loadModel(modelName: "openai_whisper-large-v3")
@@ -49,28 +43,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             print("[AC Voice] Setup failed: \(error)")
             await MainActor.run {
                 statusBarController.updateState(.error("Model failed"))
-                showAlert(
-                    title: "Model Loading Failed",
-                    message: "\(error)"
-                )
+                showAlert(title: "Model Loading Failed", message: "\(error)")
             }
             return
         }
 
-        // Step 3: Try to start hotkey, or poll until accessibility is granted
-        await MainActor.run {
-            tryStartHotkey()
-        }
+        await MainActor.run { tryStartHotkey() }
     }
 
     private func tryStartHotkey() {
-        hotkeyManager.onHotkeyDown = { [weak self] in
-            self?.startDictation()
-        }
-
-        hotkeyManager.onHotkeyUp = { [weak self] in
-            self?.stopDictation()
-        }
+        hotkeyManager.onHotkeyDown = { [weak self] in self?.startDictation() }
+        hotkeyManager.onHotkeyUp   = { [weak self] in self?.stopDictation() }
 
         let isTrusted = HotkeyManager.checkAccessibility(prompt: false)
         print("[AC Voice] AXIsProcessTrusted = \(isTrusted)")
@@ -112,10 +95,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func startDictation() {
         guard !isProcessing else { return }
-
         do {
-            audioRecorder.onAudioLevel = { [weak self] level in
-                self?.overlayWindow.updateAudioLevel(level)
+            audioRecorder.onFrequencyBands = { [weak self] bands in
+                self?.overlayWindow.updateFrequencyBands(bands)
             }
             try audioRecorder.startRecording()
             statusBarController.updateState(.recording)
@@ -137,19 +119,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        // Switch overlay to transcribing mode (spinning dots)
         isProcessing = true
         statusBarController.updateState(.transcribing)
         overlayWindow.show(mode: .transcribing)
 
         Task {
             do {
-                let text = try await transcriptionEngine.transcribe(frames: frames, translate: statusBarController.translateEnabled)
+                let text = try await transcriptionEngine.transcribe(
+                    frames: frames,
+                    translate: statusBarController.translateEnabled
+                )
                 await MainActor.run {
                     overlayWindow.hide()
-                    if !text.isEmpty {
-                        textInjector.inject(text)
-                    }
+                    if !text.isEmpty { textInjector.inject(text) }
                     isProcessing = false
                     statusBarController.updateState(.idle)
                 }

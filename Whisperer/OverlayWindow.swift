@@ -10,24 +10,16 @@ class OverlayWindow {
     private var contentView: OverlayPillView?
     private var positionTimer: Timer?
 
-    private let pillWidth: CGFloat = 120
-    private let pillHeight: CGFloat = 40
+    private let pillWidth:  CGFloat = 160
+    private let pillHeight: CGFloat = 44
     private let cursorOffset: CGFloat = 20
 
     func show(mode: OverlayMode) {
-        if window != nil {
-            // Already showing — just switch mode
-            contentView?.setMode(mode)
-            return
-        }
-
-        let frame = NSRect(x: 0, y: 0, width: pillWidth, height: pillHeight)
+        if window != nil { contentView?.setMode(mode); return }
 
         let win = NSWindow(
-            contentRect: frame,
-            styleMask: [.borderless],
-            backing: .buffered,
-            defer: false
+            contentRect: NSRect(x: 0, y: 0, width: pillWidth, height: pillHeight),
+            styleMask: [.borderless], backing: .buffered, defer: false
         )
         win.level = .floating
         win.isOpaque = false
@@ -42,169 +34,180 @@ class OverlayWindow {
 
         updatePosition(for: win)
         win.orderFrontRegardless()
-
         window = win
         contentView = pill
 
-        positionTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self] _ in
-            guard let self = self, let win = self.window else { return }
-            self.updatePosition(for: win)
+        // Position update at display refresh rate
+        positionTimer = Timer.scheduledTimer(withTimeInterval: 0.016, repeats: true) { [weak self] _ in
+            guard let self = self, let w = self.window else { return }
+            self.updatePosition(for: w)
         }
     }
 
     func hide() {
-        positionTimer?.invalidate()
-        positionTimer = nil
+        positionTimer?.invalidate(); positionTimer = nil
         contentView?.stopAll()
         window?.orderOut(nil)
-        window = nil
-        contentView = nil
+        window = nil; contentView = nil
     }
 
-    func updateAudioLevel(_ level: Float) {
-        contentView?.updateAudioLevel(level)
+    /// Feed raw frequency-band magnitudes (0-1) from the FFT
+    func updateFrequencyBands(_ bands: [Float]) {
+        contentView?.pushBands(bands)
     }
 
     private func updatePosition(for win: NSWindow) {
-        let mouseLocation = NSEvent.mouseLocation
-        let x = mouseLocation.x - pillWidth / 2
-        let y = mouseLocation.y - pillHeight - cursorOffset
-        win.setFrameOrigin(NSPoint(x: x, y: y))
+        let m = NSEvent.mouseLocation
+        win.setFrameOrigin(NSPoint(x: m.x - pillWidth / 2,
+                                   y: m.y - pillHeight - cursorOffset))
     }
 }
 
-// MARK: - Combined pill view with recording + transcribing modes
+// MARK: - Pill view
 
 private class OverlayPillView: NSView {
+
     private var mode: OverlayMode = .recording
-    private var animationTimer: Timer?
+    private var displayLink: CVDisplayLink?
 
-    // Recording: audio-reactive bars
-    private let barCount = 5
-    private var barHeights: [CGFloat]  // Current display heights (0-1)
-    private var targetBarHeights: [CGFloat]  // Target heights from audio
-    private var audioLevel: CGFloat = 0
+    // ── Waveform ─────────────────────────────────────────────────────────────
+    private let barCount  = AudioRecorder.bandCount   // 16
+    private let barWidth: CGFloat = 2.5
+    private let barGap:   CGFloat = 3.0
 
-    // Transcribing: spinning dots
+    private var rawBands:    [Float]  // latest from FFT
+    private var smoothBands: [CGFloat] // exponentially smoothed for display
+
+    // ── Spinner ───────────────────────────────────────────────────────────────
     private var spinAngle: CGFloat = 0
 
+    // ── Init ──────────────────────────────────────────────────────────────────
     override init(frame: NSRect) {
-        barHeights = Array(repeating: 0.1, count: barCount)
-        targetBarHeights = Array(repeating: 0.1, count: barCount)
+        rawBands    = Array(repeating: 0, count: 16)
+        smoothBands = Array(repeating: 0, count: 16)
         super.init(frame: frame)
+        startDisplayLink()
+    }
+    required init?(coder: NSCoder) { fatalError() }
+    deinit { stopDisplayLink() }
+
+    // ── Public ────────────────────────────────────────────────────────────────
+    func setMode(_ m: OverlayMode) {
+        mode = m
+        if m == .recording { rawBands = Array(repeating: 0, count: barCount) }
+        DispatchQueue.main.async { self.needsDisplay = true }
     }
 
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) not implemented")
+    func pushBands(_ bands: [Float]) {
+        rawBands = bands
     }
 
-    func setMode(_ newMode: OverlayMode) {
-        mode = newMode
-        startAnimation()
-        needsDisplay = true
+    func stopAll() { stopDisplayLink() }
+
+    // ── Display link ──────────────────────────────────────────────────────────
+    private func startDisplayLink() {
+        CVDisplayLinkCreateWithActiveCGDisplays(&displayLink)
+        guard let dl = displayLink else { return }
+        let ptr = UnsafeMutableRawPointer(Unmanaged.passUnretained(self).toOpaque())
+        CVDisplayLinkSetOutputCallback(dl, { _, _, _, _, _, ctx -> CVReturn in
+            Unmanaged<OverlayPillView>.fromOpaque(ctx!).takeUnretainedValue().tick()
+            return kCVReturnSuccess
+        }, ptr)
+        CVDisplayLinkStart(dl)
     }
 
-    func updateAudioLevel(_ level: Float) {
-        audioLevel = CGFloat(level)
-
-        // Distribute level across bars with variation for visual interest
-        for i in 0..<barCount {
-            let variation = CGFloat.random(in: 0.6...1.0)
-            targetBarHeights[i] = max(0.08, audioLevel * variation)
-        }
+    private func stopDisplayLink() {
+        if let dl = displayLink { CVDisplayLinkStop(dl) }
+        displayLink = nil
     }
 
-    func stopAll() {
-        animationTimer?.invalidate()
-        animationTimer = nil
-    }
-
-    private func startAnimation() {
-        animationTimer?.invalidate()
-        animationTimer = Timer.scheduledTimer(withTimeInterval: 0.03, repeats: true) { [weak self] _ in
-            guard let self = self else { return }
-
-            switch self.mode {
-            case .recording:
-                // Smoothly interpolate toward target heights
-                for i in 0..<self.barCount {
-                    let diff = self.targetBarHeights[i] - self.barHeights[i]
-                    self.barHeights[i] += diff * 0.3
-                }
-            case .transcribing:
-                self.spinAngle += 5
-                if self.spinAngle >= 360 { self.spinAngle -= 360 }
-            }
-
-            self.needsDisplay = true
-        }
-    }
-
-    override func draw(_ dirtyRect: NSRect) {
-        super.draw(dirtyRect)
-
-        // Draw pill background
-        let pillRect = bounds.insetBy(dx: 1, dy: 1)
-        let pillPath = NSBezierPath(roundedRect: pillRect, xRadius: pillRect.height / 2, yRadius: pillRect.height / 2)
-
-        NSColor(calibratedWhite: 0.1, alpha: 0.9).setFill()
-        pillPath.fill()
-
-        NSColor(calibratedWhite: 0.3, alpha: 0.5).setStroke()
-        pillPath.lineWidth = 0.5
-        pillPath.stroke()
-
+    private func tick() {
         switch mode {
         case .recording:
-            drawWaveformBars()
+            // Smooth each band: fast attack, slow decay
+            for i in 0..<barCount {
+                let target = CGFloat(rawBands[i])
+                let rate: CGFloat = target > smoothBands[i] ? 0.40 : 0.08
+                smoothBands[i] += (target - smoothBands[i]) * rate
+            }
         case .transcribing:
-            drawSpinningDots()
+            spinAngle = (spinAngle + 3.5).truncatingRemainder(dividingBy: 360)
+        }
+        DispatchQueue.main.async { self.needsDisplay = true }
+    }
+
+    // ── Drawing ───────────────────────────────────────────────────────────────
+    override func draw(_ dirtyRect: NSRect) {
+        super.draw(dirtyRect)
+        drawBackground()
+        switch mode {
+        case .recording:    drawSpectrum()
+        case .transcribing: drawArcSpinner()
         }
     }
 
-    private func drawWaveformBars() {
-        let barWidth: CGFloat = 4
-        let barSpacing: CGFloat = 6
-        let totalBarsWidth = CGFloat(barCount) * barWidth + CGFloat(barCount - 1) * barSpacing
-        let startX = (bounds.width - totalBarsWidth) / 2
-        let maxBarHeight = bounds.height * 0.6
-        let minBarHeight: CGFloat = 4
+    private func drawBackground() {
+        let path = NSBezierPath(roundedRect: bounds.insetBy(dx: 1, dy: 1),
+                                xRadius: bounds.height / 2,
+                                yRadius: bounds.height / 2)
+        NSColor(calibratedWhite: 0.08, alpha: 0.92).setFill()
+        path.fill()
+        NSColor(calibratedWhite: 0.35, alpha: 0.40).setStroke()
+        path.lineWidth = 0.5
+        path.stroke()
+    }
+
+    // Real spectrum bars — each bar is an independent frequency band
+    private func drawSpectrum() {
+        let totalW = CGFloat(barCount) * barWidth + CGFloat(barCount - 1) * barGap
+        let startX = (bounds.width - totalW) / 2
         let centerY = bounds.height / 2
+        let maxH = bounds.height * 0.78
+        let minH: CGFloat = 2
 
         for i in 0..<barCount {
-            let barHeight = minBarHeight + (maxBarHeight - minBarHeight) * barHeights[i]
+            let mag = smoothBands[i]
+            let h = minH + (maxH - minH) * mag
+            let x = startX + CGFloat(i) * (barWidth + barGap)
 
-            let x = startX + CGFloat(i) * (barWidth + barSpacing)
-            let y = centerY - barHeight / 2
+            // Colour shifts from cyan (low) toward teal/white (high magnitude)
+            let brightness = 0.55 + mag * 0.45
+            let alpha      = 0.50 + mag * 0.50
+            NSColor(hue: 0.51, saturation: 1.0 - mag * 0.3,
+                    brightness: brightness, alpha: alpha).setFill()
 
-            let barRect = NSRect(x: x, y: y, width: barWidth, height: barHeight)
-            let barPath = NSBezierPath(roundedRect: barRect, xRadius: barWidth / 2, yRadius: barWidth / 2)
-
-            NSColor.systemCyan.setFill()
-            barPath.fill()
+            let rect = NSRect(x: x, y: centerY - h / 2, width: barWidth, height: h)
+            NSBezierPath(roundedRect: rect,
+                         xRadius: barWidth / 2,
+                         yRadius: barWidth / 2).fill()
         }
     }
 
-    private func drawSpinningDots() {
-        let dotCount = 3
-        let dotRadius: CGFloat = 3.5
-        let orbitRadius: CGFloat = 10
-        let centerX = bounds.width / 2
-        let centerY = bounds.height / 2
+    // Simple rotating arc — clean, minimal, recognisable
+    private func drawArcSpinner() {
+        let cx = bounds.width / 2
+        let cy = bounds.height / 2
+        let r:  CGFloat = 11
+        let lw: CGFloat = 2.0
 
-        for i in 0..<dotCount {
-            let angleOffset = CGFloat(i) * (360.0 / CGFloat(dotCount))
-            let angle = (spinAngle + angleOffset) * .pi / 180.0
+        // Faint track
+        let track = NSBezierPath()
+        track.appendArc(withCenter: NSPoint(x: cx, y: cy),
+                        radius: r, startAngle: 0, endAngle: 360)
+        NSColor.white.withAlphaComponent(0.12).setStroke()
+        track.lineWidth = lw
+        track.stroke()
 
-            let x = centerX + cos(angle) * orbitRadius - dotRadius
-            let y = centerY + sin(angle) * orbitRadius - dotRadius
-
-            let dotRect = NSRect(x: x, y: y, width: dotRadius * 2, height: dotRadius * 2)
-
-            // Fade dots based on position for depth effect
-            let alpha = 0.4 + 0.6 * ((sin(angle) + 1) / 2)
-            NSColor.systemOrange.withAlphaComponent(alpha).setFill()
-            NSBezierPath(ovalIn: dotRect).fill()
-        }
+        // Bright arc (~270°)
+        let arc = NSBezierPath()
+        arc.appendArc(withCenter: NSPoint(x: cx, y: cy),
+                      radius: r,
+                      startAngle: spinAngle,
+                      endAngle:   spinAngle + 270,
+                      clockwise:  false)
+        NSColor.white.withAlphaComponent(0.90).setStroke()
+        arc.lineWidth    = lw
+        arc.lineCapStyle = .round
+        arc.stroke()
     }
 }
