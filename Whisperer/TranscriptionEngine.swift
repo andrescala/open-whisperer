@@ -22,7 +22,11 @@ class TranscriptionEngine {
         guard !frames.isEmpty else { throw WhispererError.emptyAudio }
 
         let task: DecodingTask = translate ? .translate : .transcribe
-        let options = DecodingOptions(task: task)
+        let options = DecodingOptions(
+            task: task,
+            language: translate ? "en" : nil,  // nil = auto-detect source language
+            usePrefillPrompt: false             // don't bias toward English
+        )
         let results = try await pipe.transcribe(audioArray: frames, decodeOptions: options)
 
         let text = results
