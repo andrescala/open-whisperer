@@ -33,10 +33,22 @@
 | Requirement | Details |
 |-------------|---------|
 | **macOS** | 14.0 Sonoma or later |
-| **Hardware** | Apple Silicon strongly recommended (M1–M4). Intel works but transcription is slower. |
+| **Hardware** | See table below |
 | **Xcode** | 15+ with Command Line Tools (`xcode-select --install`) |
 | **Homebrew** | For installing XcodeGen |
 | **XcodeGen** | `brew install xcodegen` |
+
+### Recommended Hardware
+
+| Tier | Hardware | Experience |
+|------|----------|-----------|
+| ✅ **Optimal** | M2 / M3 / M4 (any) with 16 GB+ RAM | Near-instant transcription via Neural Engine; large-v3 model loads in ~3s |
+| ✅ **Great** | M1 (any) with 16 GB RAM | Excellent; slightly slower model load, transcription still <2s for 30s audio |
+| ⚠️ **Acceptable** | M1 with 8 GB RAM | Works well with `large-v3`; may feel slow if many other apps compete for RAM |
+| ⚠️ **Usable** | Intel Mac (2019+) with 16 GB RAM | CPU-only inference; transcription takes 3–8x longer — consider `openai_whisper-small` |
+| ❌ **Not recommended** | Intel with 8 GB RAM | Very slow; use `openai_whisper-base` and expect 10+ second waits |
+
+> The `openai_whisper-large-v3` model (~1.5 GB) needs to fit comfortably in memory alongside the OS. On Apple Silicon, it runs on the Neural Engine and doesn't compete with CPU/GPU workloads.
 
 ---
 
