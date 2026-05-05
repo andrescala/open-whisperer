@@ -27,14 +27,21 @@ class TranscriptionEngine {
             language: translate ? "en" : nil,  // nil = auto-detect source language
             usePrefillPrompt: false             // don't bias toward English
         )
-        let results = try await pipe.transcribe(audioArray: frames, decodeOptions: options)
+        NSLog("[AC Voice] transcribe() entered: %d frames, translate=%@", frames.count, translate ? "true" : "false")
+        let results: [TranscriptionResult]
+        do {
+            results = try await pipe.transcribe(audioArray: frames, decodeOptions: options)
+        } catch {
+            NSLog("[AC Voice] WhisperKit.transcribe threw: %@", String(describing: error))
+            throw error
+        }
 
         let text = results
             .map { $0.text }
             .joined(separator: " ")
             .trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
 
-        print("[AC Voice] Transcribed: \"\(text)\"")
+        NSLog("[AC Voice] Transcribed: \"%@\"", text)
         return text
     }
 }

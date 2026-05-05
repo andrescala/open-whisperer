@@ -136,7 +136,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                     statusBarController.updateState(.idle)
                 }
             } catch {
-                print("[AC Voice] Transcription failed: \(error)")
+                NSLog("[AC Voice] Transcription failed: %@", String(describing: error))
                 await MainActor.run {
                     overlayWindow.hide()
                     isProcessing = false

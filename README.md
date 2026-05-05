@@ -111,6 +111,9 @@ The app needs Accessibility access to:
 
 System Settings opens automatically — find **AC Voice** in the Accessibility list and enable it. No restart needed; the app polls for the permission and activates instantly.
 
+### 4. First Dictation Is Slow (~3 seconds)
+The first time you use **Option + Space** after launch, transcription takes ~2–3 seconds longer than usual. WhisperKit lazily loads the 1.27 GB of model weights into the Apple Neural Engine on the first inference call — not at app startup. **This is expected and only happens once per launch.** Every subsequent dictation runs in 200–500 ms. If the overlay seems "stuck" on your first try, give it a few seconds.
+
 ---
 
 ## Usage
