@@ -26,6 +26,7 @@
 		A0195F2A1AD04DC18A3EE0CE /* ACVoice.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ACVoice.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A42ED024683F323A92ADAFA2 /* WhispererError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhispererError.swift; sourceTree = "<group>"; };
 		AEF2790832F1C5A35F933751 /* HotkeyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyManager.swift; sourceTree = "<group>"; };
+		B9D3322C7C9742F6D81BE865 /* ACVoice.release.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ACVoice.release.entitlements; sourceTree = "<group>"; };
 		C8AED70906C3BA5D7502E0C7 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		CA4B4C44E8A960066863C724 /* TranscriptionEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptionEngine.swift; sourceTree = "<group>"; };
 		D5C7A45FF7FB92F7584EA2F9 /* AudioRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioRecorder.swift; sourceTree = "<group>"; };
@@ -59,6 +60,7 @@
 			isa = PBXGroup;
 			children = (
 				EEC5FACAD8230362DD06DD66 /* ACVoice.entitlements */,
+				B9D3322C7C9742F6D81BE865 /* ACVoice.release.entitlements */,
 				99A5C68F4A825311354EE660 /* AppDelegate.swift */,
 				F9D345454112DA1CFB40EEF5 /* Assets.xcassets */,
 				D5C7A45FF7FB92F7584EA2F9 /* AudioRecorder.swift */,
@@ -236,12 +238,14 @@
 				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO;
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
 				INFOPLIST_FILE = Whisperer/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.crutech.acvoice;
 				PRODUCT_NAME = "AC Voice";
 				SDKROOT = macosx;
@@ -258,12 +262,14 @@
 				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO;
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
 				INFOPLIST_FILE = Whisperer/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.crutech.acvoice;
 				PRODUCT_NAME = "AC Voice";
 				SDKROOT = macosx;
